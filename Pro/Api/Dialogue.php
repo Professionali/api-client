@@ -95,8 +95,16 @@ class Pro_Api_Dialogue
 
             // разбор ответа от сервера
             $response = explode("\n\n", str_replace("\r\n", "\n", $response));
-            $this->body = array_pop($response);
-            $this->response = explode("\n", implode("\n", $response));
+            while ($block = array_shift($response)) {
+                // это заголовок
+                if (substr($block, 0, 4) == 'HTTP') {
+                    $this->response = array_merge($this->response, explode("\n", $block));
+                } else {
+                    array_unshift($response, $block);
+                    break;
+                }
+            }
+            $this->body = implode("\n", $response);
         } else {
             $this->body = $response;
         }
