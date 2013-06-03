@@ -20,56 +20,56 @@ class Pro_Api_Dialogue
      *
      * @var string
      */
-    private $url;
+    private $url = '';
 
     /**
      * POST параметры запорса
      *
      * @var array
      */
-    private $post;
+    private $post = array();
 
     /**
      * HTTP код ответа
      *
      * @var integer
      */
-    private $http_code;
+    private $http_code = 0;
 
     /**
      * Content-Type ответа
      *
      * @var string
      */
-    private $content_type;
+    private $content_type = '';
 
     /**
      * HTTP заголовки запроса
      *
      * @var array
      */
-    private $request;
+    private $request = array();
 
     /**
      * HTTP заголовки ответа
      *
      * @var array
      */
-    private $response;
+    private $response = array();
 
     /**
      * Тело ответа
      *
      * @var array
      */
-    private $body;
+    private $body = '';
 
     /**
      * Декодированный JSON тела ответа
      *
      * @var mixed
      */
-    private $json_decode;
+    private $json_decode = array();
 
     /**
      * Конструктор
@@ -78,25 +78,32 @@ class Pro_Api_Dialogue
      * @param resource $ch       CURL хендлер
      * @param string   $url      URL запроса
      * @param array    $post     POST параметры запорса
+     * @param boolean  $debug    Режим отладки
      *
      * @param array $post
      */
-    public function __construct($response, $ch, $url, array $post = array())
+    public function __construct($response, $ch, $url, array $post = array(), $debug)
     {
+        // разбор параметров запроса
+        if ($debug) {
+            $this->content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+
+            // разбор запроса к серверу
+            $this->request = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
+            list($this->request, ) = explode("\n\n", $this->request);
+            $this->request = explode("\n", $this->request);
+
+            // разбор ответа от сервера
+            $response = explode("\n\n", str_replace("\r\n", "\n", $response));
+            $this->body = array_pop($response);
+            $this->response = explode("\n", implode("\n", $response));
+        } else {
+            $this->body = $response;
+        }
+
         $this->url = $url;
         $this->post = $post;
         $this->http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $this->content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-
-        // разбор запроса к серверу
-        $this->request = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
-        list($this->request, ) = explode("\n\n", $this->request);
-        $this->request = explode("\n", $this->request);
-
-        // разбор ответа от сервера
-        $response = explode("\n\n", str_replace("\r\n", "\n", $response));
-        $this->body = array_pop($response);
-        $this->response = explode("\n", implode("\n", $response));
         $this->json_decode = json_decode($this->body, true);
     }
 

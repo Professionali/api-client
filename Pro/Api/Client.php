@@ -69,7 +69,7 @@ class Pro_Api_Client
      *
      * @var string
      */
-    const POINT_GET_CURRENT   = '/users/get.json?ids[]=me&fields=id,name,link,avatar_big';
+    const POINT_GET_CURRENT = '/users/get.json?ids[]=me&fields=id,name,link,avatar_big';
 
     /**
      * Имя ключа токена
@@ -97,7 +97,7 @@ class Pro_Api_Client
      *
      * @var string
      */
-    const DISPLAY_PAGE  = 'page';
+    const DISPLAY_PAGE = 'page';
 
     /**
      * Вид отображения окна авторизации в виде PopUp страници
@@ -118,7 +118,14 @@ class Pro_Api_Client
      *
      * @var string
      */
-    const DISPLAY_WAP   = 'wap';
+    const DISPLAY_WAP = 'wap';
+
+    /**
+     * Режим отладки оп умолчанию
+     *
+     * @var boolean
+     */
+    const DEFAULT_DEBUG_MODE = false;
 
     /**
      * Индификатор приложения
@@ -147,6 +154,13 @@ class Pro_Api_Client
      * @var integer
      */
     protected $access_token_expires = null;
+
+    /**
+     * Режим отладки
+     *
+     * @var boolean
+     */
+    protected $debug_mode = self::DEFAULT_DEBUG_MODE;
 
     /**
      * Конструктор
@@ -202,7 +216,8 @@ class Pro_Api_Client
                 'client_id'     => $this->app_id,
                 'client_secret' => $this->app_secret,
             ),
-            self::HTTP_POST
+            self::HTTP_POST,
+            false
         )->getJsonDecode();
 
         if (isset($result[self::NAME_ACCESS_TOKEN])) {
@@ -255,15 +270,21 @@ class Pro_Api_Client
     /**
      * Выполнить запрос
      *
-     * @param string  $ressource_url Адрес API метода
-     * @param array   $parameters    Параметры запроса
-     * @param string  $method        HTTP метод запроса
-     * @param boolean $subscribe     Подписать запорс
+     * @param string       $ressource_url Адрес API метода
+     * @param array        $parameters    Параметры запроса
+     * @param string|null  $method        HTTP метод запроса
+     * @param boolean|null $subscribe     Подписать запорс
+     * @param boolean|null $debug         Режим отладки
      *
      * @return Pro_Api_Dialogue
      */
-    public function fetch($resource_url, array $parameters = array(), $method = self::HTTP_GET, $subscribe = false)
-    {
+    public function fetch(
+        $resource_url,
+        array $parameters = array(),
+        $method = self::HTTP_GET,
+        $subscribe = false,
+        $debug = null
+    ) {
         // добавление токена в параметры запроса
         if ($this->access_token) {
             if ($method == self::HTTP_GET) {
@@ -284,28 +305,42 @@ class Pro_Api_Client
                 array(self::NAME_SIGNATURE => $this->getSignature($resource_url, $parameters))
             );
         }
-        return $this->executeRequest($resource_url, $parameters, $method);
+        return $this->executeRequest(
+            $resource_url,
+            $parameters,
+            $method,
+            is_null($debug) ? $this->debug_mode : $debug
+        );
     }
 
     /**
      * Выполнить запрос
      *
-     * @param string $url        Адрес API метода
-     * @param mixed  $parameters Параметры запроса
-     * @param string $method     HTTP метод запроса
+     * @param string       $url        Адрес API метода
+     * @param mixed        $parameters Параметры запроса
+     * @param string|null  $method     HTTP метод запроса
+     * @param boolean|null $debug      Режим отладки
      *
      * @return Pro_Api_Dialogue
      */
-    private function executeRequest($url, array $parameters = array(), $method = self::HTTP_GET)
-    {
+    private function executeRequest(
+        $url,
+        array $parameters = array(),
+        $method = self::HTTP_GET,
+        $debug = self::DEFAULT_DEBUG_MODE
+    ) {
         $curl_options = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLINFO_HEADER_OUT    => true,
-            CURLOPT_HEADER         => true,
         );
+
+        // в режиме отладки сохраняем заголовки
+        if ($debug) {
+            $curl_options[CURLINFO_HEADER_OUT] = true;
+            $curl_options[CURLOPT_HEADER] = true;
+        }
 
         switch($method) {
             case self::HTTP_POST:
@@ -322,7 +357,7 @@ class Pro_Api_Client
 
         $ch = curl_init();
         curl_setopt_array($ch, $curl_options);
-        $dialogue = new Pro_Api_Dialogue(curl_exec($ch), $ch, $url, $post);
+        $dialogue = new Pro_Api_Dialogue(curl_exec($ch), $ch, $url, $post, $debug);
         curl_close($ch);
 
         $json_decode = $dialogue->getJsonDecode();
@@ -346,7 +381,7 @@ class Pro_Api_Client
                             break;
                         }
                     }
-                    return $this->executeRequest($url, $parameters, $method);
+                    return $this->executeRequest($url, $parameters, $method, $debug);
                 }
                 // токен не найден
                 if ($code == 'undefined_token') {
@@ -387,7 +422,8 @@ class Pro_Api_Client
         $result = $this->executeRequest(
                 self::API_HOST.self::POINT_REFRESH_TOKEN,
                 array(self::NAME_ACCESS_TOKEN => $this->access_token),
-                self::HTTP_GET
+                self::HTTP_GET,
+                false
         )->getJsonDecode();
         if (isset($result[self::NAME_ACCESS_TOKEN])) {
             $this->setAccessToken($result[self::NAME_ACCESS_TOKEN]);
@@ -444,5 +480,18 @@ class Pro_Api_Client
 
         // хэш url с секретным кодом приложения
         return md5(md5($url_hash).$this->app_secret);
+    }
+
+    /**
+     * Устанавливает режим отладки
+     *
+     * @param boolean $mode Режим отладки
+     *
+     * @return Pro_Api_Client
+     */
+    public function setDebugMode($mode)
+    {
+        $this->debug_mode = (bool)$mode;
+        return $this;
     }
 }
