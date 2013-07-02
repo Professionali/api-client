@@ -16,14 +16,14 @@
 class Pro_Api_Client
 {
     /**
-     * HTTP Метод GET
+     * HTTP метод GET
      *
      * @var string
      */
     const HTTP_GET = 'GET';
 
     /**
-     * HTTP Метод POST
+     * HTTP метод POST
      *
      * @var string
      */
@@ -285,16 +285,7 @@ class Pro_Api_Client
         $subscribe = false,
         $debug = null
     ) {
-        // добавление токена в параметры запроса
-        if ($this->access_token) {
-            if ($method == self::HTTP_GET) {
-                $parameters[self::NAME_ACCESS_TOKEN] = $this->access_token;
-            } elseif (strpos($resource_url, self::NAME_ACCESS_TOKEN) === false){
-                $resource_url .= (strpos($resource_url, '?')!==false ? '&' : '?').
-                    self::NAME_ACCESS_TOKEN.'='.$this->access_token;
-            }
-        }
-        // Проверяем чтоб есть ключ не устарел, если устарел обновляем его
+        // если токен устарел, обновляем его
         if($this->getAccessToken() && $this->isExpiresAccessToken()) {
             $this->refreshAccessToken();
         }
@@ -304,6 +295,13 @@ class Pro_Api_Client
                 $parameters,
                 array(self::NAME_SIGNATURE => $this->getSignature($resource_url, $parameters))
             );
+        } elseif ($this->access_token) { // добавление токена в параметры запроса
+            if ($method == self::HTTP_GET) {
+                $parameters[self::NAME_ACCESS_TOKEN] = $this->access_token;
+            } elseif (strpos($resource_url, self::NAME_ACCESS_TOKEN) === false){
+                $resource_url .= (strpos($resource_url, '?')!==false ? '&' : '?').
+                    self::NAME_ACCESS_TOKEN.'='.$this->access_token;
+            }
         }
         return $this->executeRequest(
             $resource_url,
