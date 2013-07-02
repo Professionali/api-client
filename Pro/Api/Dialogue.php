@@ -23,11 +23,11 @@ class Pro_Api_Dialogue
     private $url = '';
 
     /**
-     * POST параметры запорса
+     * Параметры запорса
      *
      * @var array
      */
-    private $post = array();
+    private $parameters = array();
 
     /**
      * HTTP код ответа
@@ -75,14 +75,14 @@ class Pro_Api_Dialogue
      * Конструктор
      *
      * @param string   $response Результат запорса
-     * @param resource $ch       CURL хендлер
-     * @param string   $url      URL запроса
-     * @param array    $post     POST параметры запорса
-     * @param boolean  $debug    Режим отладки
+     * @param resource $ch         CURL хендлер
+     * @param string   $url        URL запроса
+     * @param array    $parameters Параметры запорса
+     * @param boolean  $debug      Режим отладки
      *
      * @param array $post
      */
-    public function __construct($response, $ch, $url, array $post = array(), $debug)
+    public function __construct($response, $ch, $url, array $parameters = array(), $debug)
     {
         // разбор параметров запроса
         if ($debug) {
@@ -110,7 +110,7 @@ class Pro_Api_Dialogue
         }
 
         $this->url = $url;
-        $this->post = $post;
+        $this->parameters = $parameters;
         $this->http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $this->json_decode = json_decode($this->body, true);
     }
@@ -126,13 +126,13 @@ class Pro_Api_Dialogue
     }
 
     /**
-     * Возвращает POST параметры запорса
+     * Возвращает параметры запорса
      *
      * @return array
      */
-    public function getPost()
+    public function getParameters()
     {
-        return $this->post;
+        return $this->parameters;
     }
 
     /**

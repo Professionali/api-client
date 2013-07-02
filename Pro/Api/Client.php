@@ -30,6 +30,20 @@ class Pro_Api_Client
     const HTTP_POST = 'POST';
 
     /**
+     * HTTP метод PUT
+     *
+     * @var string
+     */
+    const HTTP_PUT = 'PUT';
+
+    /**
+     * HTTP метод DELETE
+     *
+     * @var string
+     */
+    const HTTP_DELETE = 'DELETE';
+
+    /**
      * Хост для апи
      *
      * @var string
@@ -289,19 +303,10 @@ class Pro_Api_Client
         if($this->getAccessToken() && $this->isExpiresAccessToken()) {
             $this->refreshAccessToken();
         }
-        // подписываем запрос при необходимости
-        if ($subscribe) {
-            $parameters = array_merge(
-                $parameters,
-                array(self::NAME_SIGNATURE => $this->getSignature($resource_url, $parameters))
-            );
+        if ($subscribe) { // подписываем запрос при необходимости
+            $parameters[self::NAME_SIGNATURE] = $this->getSignature($resource_url, $parameters);
         } elseif ($this->access_token) { // добавление токена в параметры запроса
-            if ($method == self::HTTP_GET) {
-                $parameters[self::NAME_ACCESS_TOKEN] = $this->access_token;
-            } elseif (strpos($resource_url, self::NAME_ACCESS_TOKEN) === false){
-                $resource_url .= (strpos($resource_url, '?')!==false ? '&' : '?').
-                    self::NAME_ACCESS_TOKEN.'='.$this->access_token;
-            }
+            $parameters[self::NAME_ACCESS_TOKEN] = $this->access_token;
         }
         return $this->executeRequest(
             $resource_url,
@@ -341,21 +346,24 @@ class Pro_Api_Client
         }
 
         switch($method) {
-            case self::HTTP_POST:
-                $curl_options[CURLOPT_POST] = true;
-                $curl_options[CURLOPT_POSTFIELDS] = http_build_query($parameters);
-                $post = $parameters;
-                break;
             case self::HTTP_GET:
                 $url .= (strpos($url, '?')!==false ? '&' : '?') . http_build_query($parameters);
-                $post = array();
                 break;
+            case self::HTTP_POST:
+                $curl_options[CURLOPT_POST] = true;
+            case self::HTTP_PUT:
+            case self::HTTP_DELETE:
+                $curl_options[CURLOPT_POSTFIELDS] = http_build_query($parameters);
+                break;
+            default:
+                throw new Pro_Api_Exception('no_support_method', 'Неподдерживаемый метод запроса', null);
         }
+        $curl_options[CURLOPT_CUSTOMREQUEST] = $method;
         $curl_options[CURLOPT_URL] = $url;
 
         $ch = curl_init();
         curl_setopt_array($ch, $curl_options);
-        $dialogue = new Pro_Api_Dialogue(curl_exec($ch), $ch, $url, $post, $debug);
+        $dialogue = new Pro_Api_Dialogue(curl_exec($ch), $ch, $url, $parameters, $debug);
         curl_close($ch);
 
         $json_decode = $dialogue->getJsonDecode();
@@ -369,16 +377,7 @@ class Pro_Api_Client
                 // токен устарел
                 if ($code == 'invalid_token') {
                     $this->refreshAccessToken();
-                    switch($method) {
-                        case self::HTTP_POST: {
-                            $url = preg_replace('/('.self::NAME_ACCESS_TOKEN.'=)[a-z\d]{32}/', '$1'.$token, $url);
-                            break;
-                        }
-                        case self::HTTP_GET: {
-                            $parameters[self::NAME_ACCESS_TOKEN] = $token;
-                            break;
-                        }
-                    }
+                    $parameters[self::NAME_ACCESS_TOKEN] = $token;
                     return $this->executeRequest($url, $parameters, $method, $debug);
                 }
                 // токен не найден
@@ -418,10 +417,10 @@ class Pro_Api_Client
     public function refreshAccessToken()
     {
         $result = $this->executeRequest(
-                self::API_HOST.self::POINT_REFRESH_TOKEN,
-                array(self::NAME_ACCESS_TOKEN => $this->access_token),
-                self::HTTP_GET,
-                false
+            self::API_HOST.self::POINT_REFRESH_TOKEN,
+            array(self::NAME_ACCESS_TOKEN => $this->access_token),
+            self::HTTP_GET,
+            false
         )->getJsonDecode();
         if (isset($result[self::NAME_ACCESS_TOKEN])) {
             $this->setAccessToken($result[self::NAME_ACCESS_TOKEN]);
