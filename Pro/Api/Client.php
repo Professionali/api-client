@@ -470,7 +470,17 @@ class Pro_Api_Client
             unset($parsed['query'][self::NAME_ACCESS_TOKEN], $parsed['query'][self::NAME_SIGNATURE]);
             ksort($parsed['query']);
             $url_hash .= implode('', array_keys($parsed['query']));
-            $url_hash .= implode('', array_values($parsed['query']));
+            // получение значения из многомерного массива параметров
+            while (count($parsed['query'])) {
+                $value = array_shift($parsed['query']);
+                if (is_array($value)) {
+                    foreach ($value as $k => $v) {
+                        array_unshift($parsed['query'], $k, $v);
+                    }
+                } else {
+                    $url_hash .= $value;
+                }
+            }
         }
         unset($parsed['query']);
         ksort($parsed);
