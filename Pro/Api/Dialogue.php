@@ -204,7 +204,7 @@ class Pro_Api_Dialogue
     {
         return array(
             'url'          => $this->url,
-            'post'         => $this->post,
+            'parameters'   => $this->parameters,
             'request'      => $this->request,
             'http_code'    => $this->http_code,
             'content_type' => $this->content_type,
