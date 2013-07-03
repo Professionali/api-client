@@ -83,7 +83,7 @@ class Pro_Api_Client
      *
      * @var string
      */
-    const POINT_GET_CURRENT = '/v7/users/me/?fields=id,name,link,avatar_big';
+    const POINT_GET_CURRENT = '/v6/users/get.json?ids[]=me&fields=id,name,link,avatar_big';
 
     /**
      * Имя ключа токена
@@ -441,7 +441,7 @@ class Pro_Api_Client
             array(self::NAME_ACCESS_TOKEN => $this->access_token),
             self::HTTP_GET
         )->getJsonDecode();
-        return $result['user'];
+        return $result[0];
     }
 
     /**
