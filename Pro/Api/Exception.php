@@ -43,12 +43,12 @@ class Pro_Api_Exception extends Exception
      * @param string           $description Описание ошибки
      * @param Pro_Api_Dialogue $dialogue    Диалог
      */
-    public function __construct($error, $description, Pro_Api_Dialogue $dialogue)
+    public function __construct($error, $description, Pro_Api_Dialogue $dialogue = null)
     {
         $this->error       = $error;
         $this->dialogue    = $dialogue;
         $this->description = $description;
-        parent::__construct($error, $dialogue->getHttpCode());
+        parent::__construct($error, $dialogue ? $dialogue->getHttpCode() : 500);
     }
 
     /**
