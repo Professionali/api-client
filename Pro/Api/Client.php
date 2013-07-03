@@ -332,6 +332,12 @@ class Pro_Api_Client
         $method = self::HTTP_GET,
         $debug = self::DEFAULT_DEBUG_MODE
     ) {
+        // параметры из url передаются в список параметров
+        if (strpos($url, '?') !== false) {
+            list($url, $url_params) = explode('?', $url, 2);
+            parse_str($url_params, $url_params);
+            $parameters += $url_params;
+        }
         $curl_options = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => true,
@@ -347,7 +353,7 @@ class Pro_Api_Client
 
         switch($method) {
             case self::HTTP_GET:
-                $url .= (strpos($url, '?')!==false ? '&' : '?') . http_build_query($parameters);
+                $url .= '?'.http_build_query($parameters);
                 break;
             case self::HTTP_POST:
                 $curl_options[CURLOPT_POST] = true;
