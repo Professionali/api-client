@@ -336,7 +336,7 @@ class Pro_Api_Client
         if (strpos($url, '?') !== false) {
             list($url, $url_params) = explode('?', $url, 2);
             parse_str($url_params, $url_params);
-            $parameters += $url_params;
+            $parameters = $url_params+$parameters;
         }
         $curl_options = array(
             CURLOPT_RETURNTRANSFER => true,
