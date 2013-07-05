@@ -15,8 +15,8 @@ session_start();
 
 // Создаем API клиента
 $client = new Pro_Api_Client(
-    'APP_CODE',
-    'APP_SECRET',
+    APP_CODE, // код приложения
+    APP_SECRET, // секретный ключ приложения
     $_SESSION['token'],
     $_SESSION['expires']
 );
