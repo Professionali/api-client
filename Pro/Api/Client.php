@@ -215,18 +215,16 @@ class Pro_Api_Client
     /**
      * Получение токена доступа
      *
-     * @param string $code         Код авторизации
-     * @param string $redirect_uri Адрес редиректа после авторизации
+     * @param string $code Код авторизации
      *
      * @return array
      */
-    public function getAccessTokenFromCode($code, $redirect_uri)
+    public function getAccessTokenFromCode($code)
     {
         $result = $this->executeRequest(
             Pro_Api_Client::API_HOST.Pro_Api_Client::POINT_GET_TOKEN,
             array(
                 'code'          => $code,
-                'redirect_uri'  => $redirect_uri,
                 'client_id'     => $this->app_id,
                 'client_secret' => $this->app_secret,
             ),
