@@ -1,16 +1,21 @@
-Api Client
-==========
+# Api Client
 
 Библиотека предоставляющая удобный интерфейс для доступа к API интерфейсу социальной сети [Professionali.ru](http://professionali.ru/).
 Подробней об использовании API и доступных методах читайте в [документации](http://dev.professionali.ru/docs/auth/).
 
+## Установка
+
+Библиотека ставится через composer:
+
+```
+composer.phar require professionali/api-client:1.*
+composer.phar update
+```
+
+## Использование
+
 Пример авторизации приложения по средствам библиотеки:
 ```php
-// подключаем библиотеку
-require 'client/Pro/Api/Client.php';
-require 'client/Pro/Api/Dialogue.php';
-require 'client/Pro/Api/Exception.php';
-
 session_start();
 
 // Создаем API клиента

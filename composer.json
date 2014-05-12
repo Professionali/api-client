@@ -1,0 +1,31 @@
+{
+    "name": "professionali/api-client",
+    "license": "BSD-3-Clause",
+    "type": "library",
+    "description": "API client for execute request for api.professionali.ru",
+    "homepage": "http://professionali.ru",
+    "version": "1.0.1",
+    "authors": [
+        {
+            "name": "Professionali",
+            "homepage": "http://professionali.ru"
+        },
+        {
+            "name": "Valetin Gernovich",
+            "email": "gernovich@ya.ru"
+        },
+        {
+            "name": "Professionali on GitHub",
+            "homepage": "https://github.com/Professionali/api-client"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "Pro_Api_": "lib/"
+        }
+    },
+    "require": {
+        "php": ">=5.3.0",
+        "ext-curl": "*"
+    }
+}
