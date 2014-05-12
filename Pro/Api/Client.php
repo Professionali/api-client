@@ -208,7 +208,7 @@ class Pro_Api_Client
             'redirect_uri'  => $redirect_uri,
             'display'       => $display,
         );
-        return Pro_Api_Client::API_HOST.Pro_Api_Client::POINT_AUTHORIZATION.
+        return self::API_HOST.self::POINT_AUTHORIZATION.
             '?'.http_build_query($parameters, null, '&');
     }
 
@@ -222,7 +222,7 @@ class Pro_Api_Client
     public function getAccessTokenFromCode($code)
     {
         $result = $this->executeRequest(
-            Pro_Api_Client::API_HOST.Pro_Api_Client::POINT_GET_TOKEN,
+            self::API_HOST.self::POINT_GET_TOKEN,
             array(
                 'code'          => $code,
                 'client_id'     => $this->app_id,
@@ -341,6 +341,7 @@ class Pro_Api_Client
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_CUSTOMREQUEST  => $method,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_URL => $url,
         );
 
         // в режиме отладки сохраняем заголовки
@@ -352,6 +353,7 @@ class Pro_Api_Client
         switch($method) {
             case self::HTTP_GET:
                 $url .= '?'.http_build_query($parameters);
+                $curl_options[CURLOPT_URL] = $url;
                 break;
             case self::HTTP_POST:
                 $curl_options[CURLOPT_POST] = true;
@@ -362,8 +364,6 @@ class Pro_Api_Client
             default:
                 throw new Pro_Api_Exception('no_support_method', 'Неподдерживаемый метод запроса', null);
         }
-        $curl_options[CURLOPT_CUSTOMREQUEST] = $method;
-        $curl_options[CURLOPT_URL] = $url;
 
         $ch = curl_init();
         curl_setopt_array($ch, $curl_options);
@@ -441,7 +441,7 @@ class Pro_Api_Client
     public function getCurrentUser()
     {
         $result = $this->fetch(
-            Pro_Api_Client::API_HOST.Pro_Api_Client::POINT_GET_CURRENT,
+            self::API_HOST.self::POINT_GET_CURRENT,
             array(self::NAME_ACCESS_TOKEN => $this->access_token),
             self::HTTP_GET
         )->getJsonDecode();

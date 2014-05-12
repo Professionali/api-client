@@ -89,27 +89,18 @@ class Pro_Api_Dialogue
             $this->content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 
             // разбор запроса к серверу
-            $this->request = str_replace("\r\n", "\n", curl_getinfo($ch, CURLINFO_HEADER_OUT));
-            list($this->request, ) = explode("\n\n", $this->request);
-            $this->request = explode("\n", $this->request);
+            $this->request = curl_getinfo($ch, CURLINFO_HEADER_OUT);
+            $this->request = explode("\n", str_replace("\r\n", "\n", trim($this->request)));
 
             // разбор ответа от сервера
-            $response = explode("\n\n", str_replace("\r\n", "\n", $response));
-            while ($block = array_shift($response)) {
-                // это заголовок
-                if (substr($block, 0, 4) == 'HTTP') {
-                    $this->response = array_merge($this->response, explode("\n", $block));
-                } else {
-                    array_unshift($response, $block);
-                    break;
-                }
-            }
-            $this->body = implode("\n", $response);
+            $this->body = substr($response, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+            $this->response = substr($response, 0, curl_getinfo($ch, CURLINFO_HEADER_SIZE));
+            $this->response = explode("\n", str_replace(array("\r\n", "\n\n"), "\n", trim($this->response)));
         } else {
             $this->body = $response;
         }
 
-        $this->url = $url;
+        $this->url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
         $this->parameters = $parameters;
         $this->http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $this->json_decode = json_decode($this->body, true);
